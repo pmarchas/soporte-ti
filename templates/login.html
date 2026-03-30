@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Iniciar sesión — Soporte TI{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+  <div class="auth-card">
+    <h1 class="auth-title">Soporte TI</h1>
+    <p class="auth-subtitle">Inicia sesión para continuar</p>
+
+    <form method="POST" action="{{ url_for('login') }}" class="form">
+      <div class="field">
+        <label for="email">Correo electrónico</label>
+        <input type="email" id="email" name="email" required autocomplete="email" />
+      </div>
+      <div class="field">
+        <label for="password">Contraseña</label>
+        <input type="password" id="password" name="password" required autocomplete="current-password" />
+      </div>
+      <button type="submit" class="btn btn--primary btn--full">Entrar</button>
+    </form>
+
+    <p class="auth-footer">
+      ¿No tienes cuenta? <a href="{{ url_for('registro') }}">Regístrate</a>
+    </p>
+  </div>
+</div>
+{% endblock %}
