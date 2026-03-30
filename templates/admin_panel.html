@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Panel de administración — Soporte TI{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h2>Tickets</h2>
+    <p class="page-subtitle">Gestión de todas las peticiones recibidas.</p>
+  </div>
+</div>
+
+<!-- Filtros -->
+<form method="GET" action="{{ url_for('admin_panel') }}" class="filters-form">
+  <select name="estado" onchange="this.form.submit()">
+    <option value="">Todos los estados</option>
+    {% for e in ["Abierto", "En progreso", "Resuelto", "Cerrado"] %}
+    <option value="{{ e }}" {% if estado_filtro == e %}selected{% endif %}>{{ e }}</option>
+    {% endfor %}
+  </select>
+  <select name="prioridad" onchange="this.form.submit()">
+    <option value="">Todas las prioridades</option>
+    {% for p in ["Alta", "Media", "Baja"] %}
+    <option value="{{ p }}" {% if prioridad_filtro == p %}selected{% endif %}>{{ p }}</option>
+    {% endfor %}
+  </select>
+  {% if estado_filtro or prioridad_filtro %}
+  <a href="{{ url_for('admin_panel') }}" class="btn btn--ghost btn--sm">Limpiar filtros</a>
+  {% endif %}
+</form>
+
+{% if tickets %}
+<div class="table-wrapper">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Título</th>
+        <th>Usuario</th>
+        <th>Prioridad</th>
+        <th>Estado</th>
+        <th>Fecha</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in tickets %}
+      <tr>
+        <td class="muted">{{ t.id }}</td>
+        <td>{{ t.titulo }}</td>
+        <td>{{ t.autor.nombre }}<br /><span class="muted small">{{ t.autor.email }}</span></td>
+        <td><span class="badge badge--prioridad-{{ t.prioridad | lower }}">{{ t.prioridad }}</span></td>
+        <td><span class="badge badge--estado-{{ t.estado | lower | replace(' ', '-') }}">{{ t.estado }}</span></td>
+        <td class="muted">{{ t.creado_en.strftime('%d/%m/%Y') }}</td>
+        <td><a href="{{ url_for('ver_ticket', ticket_id=t.id) }}" class="link">Ver</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="empty-state">
+  <p>No hay tickets con los filtros seleccionados.</p>
+</div>
+{% endif %}
+{% endblock %}
