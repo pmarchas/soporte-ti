@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Ticket #{{ ticket.id }} — Soporte TI{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <p class="breadcrumb">
+      <a href="{{ url_for('admin_panel') if current_user.rol == 'admin' else url_for('dashboard') }}">
+        ← Volver
+      </a>
+    </p>
+    <h2>{{ ticket.titulo }}</h2>
+    <p class="page-subtitle">Ticket #{{ ticket.id }} · enviado por {{ ticket.autor.nombre }}</p>
+  </div>
+  <div class="badge-group">
+    <span class="badge badge--prioridad-{{ ticket.prioridad | lower }}">{{ ticket.prioridad }}</span>
+    <span class="badge badge--estado-{{ ticket.estado | lower | replace(' ', '-') }}">{{ ticket.estado }}</span>
+  </div>
+</div>
+
+<div class="ticket-layout">
+  <!-- Columna principal -->
+  <div class="ticket-main">
+    <div class="card">
+      <h3 class="card-section-title">Descripción</h3>
+      <p class="ticket-descripcion">{{ ticket.descripcion }}</p>
+    </div>
+
+    <!-- Comentarios -->
+    <div class="card">
+      <h3 class="card-section-title">Conversación</h3>
+
+      {% if comentarios %}
+        <div class="comentarios">
+          {% for c in comentarios %}
+          <div class="comentario {% if c.autor.rol == 'admin' %}comentario--admin{% endif %}">
+            <div class="comentario-header">
+              <strong>{{ c.autor.nombre }}</strong>
+              {% if c.autor.rol == "admin" %}
+                <span class="badge badge--admin">Sistemas</span>
+              {% endif %}
+              <span class="comentario-fecha muted">{{ c.creado_en.strftime('%d/%m/%Y %H:%M') }}</span>
+            </div>
+            <p class="comentario-texto">{{ c.contenido }}</p>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="muted">Aún no hay comentarios.</p>
+      {% endif %}
+
+      {% if ticket.estado != "Cerrado" %}
+      <form method="POST" action="{{ url_for('comentar', ticket_id=ticket.id) }}" class="form comment-form">
+        <div class="field">
+          <label for="contenido">
+            {% if current_user.rol == "admin" %}Responder al usuario{% else %}Añadir comentario{% endif %}
+          </label>
+          <textarea id="contenido" name="contenido" rows="3" placeholder="Escribe tu mensaje..." required></textarea>
+        </div>
+        <button type="submit" class="btn btn--primary">Enviar</button>
+      </form>
+      {% else %}
+        <p class="muted" style="margin-top:1rem;">Este ticket está cerrado y no admite más comentarios.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Columna lateral (solo admin) -->
+  {% if current_user.rol == "admin" %}
+  <div class="ticket-sidebar">
+    <div class="card">
+      <h3 class="card-section-title">Gestión</h3>
+      <form method="POST" action="{{ url_for('cambiar_estado', ticket_id=ticket.id) }}" class="form">
+        <div class="field">
+          <label for="estado">Cambiar estado</label>
+          <select id="estado" name="estado">
+            {% for e in ["Abierto", "En progreso", "Resuelto", "Cerrado"] %}
+            <option value="{{ e }}" {% if ticket.estado == e %}selected{% endif %}>{{ e }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <button type="submit" class="btn btn--primary btn--full">Actualizar estado</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h3 class="card-section-title">Información</h3>
+      <dl class="info-list">
+        <dt>Usuario</dt>
+        <dd>{{ ticket.autor.nombre }}<br /><span class="muted">{{ ticket.autor.email }}</span></dd>
+        <dt>Creado</dt>
+        <dd>{{ ticket.creado_en.strftime('%d/%m/%Y %H:%M') }}</dd>
+        <dt>Actualizado</dt>
+        <dd>{{ ticket.actualizado_en.strftime('%d/%m/%Y %H:%M') }}</dd>
+      </dl>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
