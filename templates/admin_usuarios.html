@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Usuarios — Soporte TI{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h2>Usuarios</h2>
+    <p class="page-subtitle">Gestiona los roles de los usuarios registrados.</p>
+  </div>
+</div>
+
+<div class="table-wrapper">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Correo</th>
+        <th>Rol</th>
+        <th>Registrado</th>
+        <th>Tickets</th>
+        <th>Acción</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in usuarios %}
+      <tr>
+        <td>{{ u.nombre }}</td>
+        <td class="muted">{{ u.email }}</td>
+        <td>
+          {% if u.rol == "admin" %}
+            <span class="badge badge--admin">Sistemas</span>
+          {% else %}
+            <span class="badge badge--usuario">Usuario</span>
+          {% endif %}
+        </td>
+        <td class="muted">{{ u.creado_en.strftime('%d/%m/%Y') }}</td>
+        <td class="muted">{{ u.tickets | length }}</td>
+        <td>
+          {% if u.id != current_user.id %}
+          <form method="POST" action="{{ url_for('cambiar_rol', user_id=u.id) }}" class="inline-form">
+            <select name="rol" onchange="this.form.submit()" class="select-inline">
+              <option value="usuario" {% if u.rol == "usuario" %}selected{% endif %}>Usuario</option>
+              <option value="admin" {% if u.rol == "admin" %}selected{% endif %}>Sistemas</option>
+            </select>
+          </form>
+          {% else %}
+            <span class="muted small">(eres tú)</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
