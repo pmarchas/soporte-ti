@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block title %}Estadísticas — Soporte TI{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h2>Estadísticas</h2>
+    <p class="page-subtitle">Resumen del estado actual del sistema de tickets.</p>
+  </div>
+</div>
+
+<!-- Tarjetas de métricas principales -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <span class="stat-label">Total tickets</span>
+    <span class="stat-value">{{ total }}</span>
+  </div>
+  <div class="stat-card stat-card--blue">
+    <span class="stat-label">Abiertos</span>
+    <span class="stat-value">{{ por_estado['Abierto'] }}</span>
+  </div>
+  <div class="stat-card stat-card--purple">
+    <span class="stat-label">En progreso</span>
+    <span class="stat-value">{{ por_estado['En progreso'] }}</span>
+  </div>
+  <div class="stat-card stat-card--green">
+    <span class="stat-label">Resueltos / Cerrados</span>
+    <span class="stat-value">{{ resueltos }}</span>
+  </div>
+  {% if tiempo_medio_h is not none %}
+  <div class="stat-card stat-card--gray">
+    <span class="stat-label">Tiempo medio de resolución</span>
+    <span class="stat-value">{{ tiempo_medio_h }}<span class="stat-unit">h</span></span>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Gráficas -->
+<div class="charts-grid">
+  <!-- Tickets por día (últimos 30 días) -->
+  <div class="card chart-card chart-card--wide">
+    <h3 class="card-section-title">Tickets creados — últimos 30 días</h3>
+    <canvas id="chartDiario" height="90"></canvas>
+  </div>
+
+  <!-- Por estado -->
+  <div class="card chart-card">
+    <h3 class="card-section-title">Por estado</h3>
+    <canvas id="chartEstado" height="200"></canvas>
+  </div>
+
+  <!-- Por prioridad -->
+  <div class="card chart-card">
+    <h3 class="card-section-title">Por prioridad</h3>
+    <canvas id="chartPrioridad" height="200"></canvas>
+  </div>
+</div>
+
+<!-- Tickets recientes -->
+<div class="card" style="margin-top:0">
+  <h3 class="card-section-title">Actividad reciente</h3>
+  {% if recientes %}
+  <table class="table" style="margin:-1px">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Título</th>
+        <th>Usuario</th>
+        <th>Prioridad</th>
+        <th>Estado</th>
+        <th>Fecha</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in recientes %}
+      <tr>
+        <td class="muted">{{ t.id }}</td>
+        <td>{{ t.titulo }}</td>
+        <td>{{ t.autor.nombre }}</td>
+        <td><span class="badge badge--prioridad-{{ t.prioridad | lower }}">{{ t.prioridad }}</span></td>
+        <td><span class="badge badge--estado-{{ t.estado | lower | replace(' ', '-') }}">{{ t.estado }}</span></td>
+        <td class="muted">{{ t.creado_en.strftime('%d/%m/%Y') }}</td>
+        <td><a href="{{ url_for('ver_ticket', ticket_id=t.id) }}" class="link">Ver</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <p class="muted">Aún no hay tickets.</p>
+  {% endif %}
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+  Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+  Chart.defaults.font.size   = 12;
+  Chart.defaults.color       = "#888884";
+
+  // ── Gráfica de línea: tickets por día ──────────────────────────────────────
+  new Chart(document.getElementById("chartDiario"), {
+    type: "line",
+    data: {
+      labels: {{ labels_diarios | tojson }},
+      datasets: [{
+        label: "Tickets",
+        data: {{ valores_diarios | tojson }},
+        borderColor: "#2563eb",
+        backgroundColor: "rgba(37,99,235,.08)",
+        borderWidth: 2,
+        pointRadius: 3,
+        pointBackgroundColor: "#2563eb",
+        fill: true,
+        tension: 0.3,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: "#e4e4e0" }, ticks: { maxTicksLimit: 10 } },
+        y: { grid: { color: "#e4e4e0" }, beginAtZero: true, ticks: { stepSize: 1 } }
+      }
+    }
+  });
+
+  // ── Gráfica de dona: por estado ────────────────────────────────────────────
+  new Chart(document.getElementById("chartEstado"), {
+    type: "doughnut",
+    data: {
+      labels: {{ por_estado.keys() | list | tojson }},
+      datasets: [{
+        data: {{ por_estado.values() | list | tojson }},
+        backgroundColor: ["#bfdbfe", "#e9d5ff", "#bbf7d0", "#e4e4e4"],
+        borderColor:     ["#2563eb", "#7e22ce", "#16a34a", "#9ca3af"],
+        borderWidth: 2,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: "bottom", labels: { padding: 14, boxWidth: 12 } }
+      },
+      cutout: "60%"
+    }
+  });
+
+  // ── Gráfica de barras: por prioridad ───────────────────────────────────────
+  new Chart(document.getElementById("chartPrioridad"), {
+    type: "bar",
+    data: {
+      labels: {{ por_prioridad.keys() | list | tojson }},
+      datasets: [{
+        label: "Tickets",
+        data: {{ por_prioridad.values() | list | tojson }},
+        backgroundColor: ["#fecaca", "#fde68a", "#bbf7d0"],
+        borderColor:     ["#b91c1c", "#b45309", "#16a34a"],
+        borderWidth: 2,
+        borderRadius: 6,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false } },
+        y: { grid: { color: "#e4e4e0" }, beginAtZero: true, ticks: { stepSize: 1 } }
+      }
+    }
+  });
+</script>
+{% endblock %}
