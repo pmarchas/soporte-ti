@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Nuevo ticket — Soporte TI{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h2>Nuevo ticket</h2>
+    <p class="page-subtitle">Describe tu problema con el mayor detalle posible.</p>
+  </div>
+  <a href="{{ url_for('dashboard') }}" class="btn btn--ghost">Cancelar</a>
+</div>
+
+<div class="card">
+  <form method="POST" action="{{ url_for('nuevo_ticket') }}" class="form">
+    <div class="field">
+      <label for="titulo">Título <span class="required">*</span></label>
+      <input type="text" id="titulo" name="titulo" placeholder="Resumen breve del problema" required />
+    </div>
+    <div class="field">
+      <label for="descripcion">Descripción <span class="required">*</span></label>
+      <textarea id="descripcion" name="descripcion" rows="6"
+        placeholder="Explica el problema con detalle: qué ocurre, desde cuándo, qué has intentado..." required></textarea>
+    </div>
+    <div class="field field--inline">
+      <label for="prioridad">Prioridad</label>
+      <select id="prioridad" name="prioridad">
+        <option value="Baja">Baja</option>
+        <option value="Media" selected>Media</option>
+        <option value="Alta">Alta</option>
+      </select>
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn btn--primary">Enviar ticket</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
