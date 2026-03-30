@@ -1,0 +1,53 @@
+services:
+
+  app:
+    build: .
+    restart: unless-stopped
+    environment:
+      # ── Seguridad ──────────────────────────────────────────────────────────
+      SECRET_KEY: "${SECRET_KEY}"
+
+      # ── Base de datos ──────────────────────────────────────────────────────
+      # SQLite almacenada en el volumen /data para que persista entre reinicios
+      SQLALCHEMY_DATABASE_URI: "sqlite:////data/tickets.db"
+
+      # ── Correo saliente (SMTP) ─────────────────────────────────────────────
+      # Rellena estos valores en el fichero .env (no los pongas aquí en texto claro)
+      MAIL_SERVER:   "${MAIL_SERVER}"
+      MAIL_PORT:     "${MAIL_PORT:-587}"
+      MAIL_USERNAME: "${MAIL_USERNAME}"
+      MAIL_PASSWORD: "${MAIL_PASSWORD}"
+      MAIL_USE_TLS:  "${MAIL_USE_TLS:-true}"
+      ADMIN_EMAIL:   "${ADMIN_EMAIL}"          # ← correo del equipo de sistemas
+
+      # ── URL pública (para los enlaces en los correos) ──────────────────────
+      APP_URL: "${APP_URL:-http://localhost}"
+
+    volumes:
+      - db_data:/data          # base de datos persistente
+
+    networks:
+      - internal
+
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      # Para HTTPS descomenta la siguiente línea y configura los certificados:
+      # - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./static:/app/static:ro   # sirve los estáticos directamente sin pasar por gunicorn
+      # Para HTTPS descomenta y ajusta la ruta a tus certificados:
+      # - /etc/letsencrypt:/etc/letsencrypt:ro
+    depends_on:
+      - app
+    networks:
+      - internal
+
+volumes:
+  db_data:
+
+networks:
+  internal:
