@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Soporte TI{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  {% if current_user.is_authenticated %}
+  <header class="header">
+    <div class="header-inner">
+      <a href="{{ url_for('dashboard') if current_user.rol == 'usuario' else url_for('admin_panel') }}" class="logo">
+        Soporte&nbsp;TI
+      </a>
+      <nav class="nav">
+        {% if current_user.rol == "admin" %}
+          <a href="{{ url_for('admin_panel') }}" class="nav-link {% if request.endpoint == 'admin_panel' %}active{% endif %}">Tickets</a>
+          <a href="{{ url_for('admin_estadisticas') }}" class="nav-link {% if request.endpoint == 'admin_estadisticas' %}active{% endif %}">Estadísticas</a>
+          <a href="{{ url_for('admin_usuarios') }}" class="nav-link {% if request.endpoint == 'admin_usuarios' %}active{% endif %}">Usuarios</a>
+        {% else %}
+          <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">Mis tickets</a>
+          <a href="{{ url_for('nuevo_ticket') }}" class="nav-link {% if request.endpoint == 'nuevo_ticket' %}active{% endif %}">Nuevo ticket</a>
+        {% endif %}
+        <span class="nav-user">{{ current_user.nombre }}</span>
+        <a href="{{ url_for('logout') }}" class="nav-link nav-logout">Salir</a>
+      </nav>
+    </div>
+  </header>
+  {% endif %}
+
+  <main class="main">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flashes">
+          {% for category, message in messages %}
+            <div class="flash flash--{{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>
