@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Mis tickets — Soporte TI{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h2>Mis tickets</h2>
+    <p class="page-subtitle">Aquí puedes ver el estado de tus peticiones.</p>
+  </div>
+  <a href="{{ url_for('nuevo_ticket') }}" class="btn btn--primary">+ Nuevo ticket</a>
+</div>
+
+{% if tickets %}
+<div class="table-wrapper">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Título</th>
+        <th>Prioridad</th>
+        <th>Estado</th>
+        <th>Fecha</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in tickets %}
+      <tr>
+        <td class="muted">{{ t.id }}</td>
+        <td>{{ t.titulo }}</td>
+        <td><span class="badge badge--prioridad-{{ t.prioridad | lower }}">{{ t.prioridad }}</span></td>
+        <td><span class="badge badge--estado-{{ t.estado | lower | replace(' ', '-') }}">{{ t.estado }}</span></td>
+        <td class="muted">{{ t.creado_en.strftime('%d/%m/%Y') }}</td>
+        <td><a href="{{ url_for('ver_ticket', ticket_id=t.id) }}" class="link">Ver</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="empty-state">
+  <p>No has enviado ningún ticket todavía.</p>
+  <a href="{{ url_for('nuevo_ticket') }}" class="btn btn--primary">Enviar primer ticket</a>
+</div>
+{% endif %}
+{% endblock %}
